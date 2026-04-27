@@ -8,12 +8,20 @@ import { Post } from "../types";
 export default function Article() {
   const { id } = useParams();
   const [post, setPost] = useState<Post | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
     fetch(`/api/posts/${id}`)
       .then((res) => res.json())
       .then(setPost);
+    fetch("/api/categories")
+      .then((res) => res.json())
+      .then(setCategories);
   }, [id]);
+
+  const getCategoryName = (catId: string) => {
+    return categories.find(c => c.id === catId)?.name || catId;
+  };
 
   if (!post) return <div className="h-screen flex items-center justify-center font-headline">Distilling signal...</div>;
 
@@ -23,11 +31,11 @@ export default function Article() {
       animate={{ opacity: 1 }}
       className="min-h-screen font-body"
     >
-      <header className="w-full pt-12 pb-20">
+      <header className="w-full pt-12">
         <div className="max-w-4xl mx-auto px-8">
           <div className="flex items-center gap-3 mb-8 text-on-surface-variant/60 font-label">
             <span className="text-[0.75rem] font-bold tracking-widest text-primary bg-secondary-container/30 px-3 py-1 rounded-full uppercase">
-              {post.category}
+              {getCategoryName(post.category)}
             </span>
             <span className="text-[0.75rem]">
               {post.date}
@@ -54,8 +62,8 @@ export default function Article() {
           </div>
         </div>
         
-        <div className="max-w-7xl mx-auto px-4 md:px-8 mb-20">
-          <div className="aspect-[21/9] w-full rounded-xl overflow-hidden bg-surface-container-low shadow-2xl shadow-primary/5">
+        <div className="max-w-3xl mx-auto px-8 mb-12">
+          <div className="aspect-[16/9] w-full rounded-xl overflow-hidden bg-surface-container-low shadow-2xl shadow-primary/5">
             <img
               src={post.heroImage || post.image}
               alt="Hero"
