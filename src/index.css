@@ -1,0 +1,102 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;600;700;900&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+
+@theme {
+  --font-headline: "Noto Serif SC", serif;
+  --font-body: "EB Garamond", serif;
+  --font-label: "Space Grotesk", sans-serif;
+
+  --color-primary: #001927;
+  --color-secondary: #4a626d;
+  --color-surface: #f8f9fa;
+  --color-surface-container: #edeeef;
+  --color-surface-container-low: #f3f4f5;
+  --color-surface-container-high: #e2e3e4;
+  --color-surface-container-lowest: #ffffff;
+  --color-primary-container: #162e3c;
+  --color-on-primary-container: #7e96a7;
+  --color-on-surface-variant: #42484a;
+  --color-outline-variant: #c2c7ca;
+  --color-secondary-container: #cde6f4;
+  --color-on-secondary-container: #506873;
+}
+
+@layer base {
+  body {
+    @apply bg-surface text-primary font-body antialiased;
+  }
+}
+
+.article-dropcap::first-letter {
+  float: left;
+  font-family: "Noto Serif SC", serif;
+  font-size: 5rem;
+  line-height: 4rem;
+  padding-right: 0.75rem;
+  color: #001927;
+  font-weight: 900;
+}
+
+.glass-nav {
+  @apply sticky top-0 w-full z-50 bg-white/80 backdrop-blur-md;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.markdown-body {
+  @apply font-body text-lg leading-relaxed text-on-surface-variant;
+}
+
+.markdown-body h1 {
+  @apply font-headline text-4xl text-primary mt-12 mb-6 font-bold;
+}
+
+.markdown-body h2 {
+  @apply font-headline text-3xl text-primary mt-10 mb-5 font-bold;
+}
+
+.markdown-body h3 {
+  @apply font-headline text-2xl text-primary mt-8 mb-4 font-bold;
+}
+
+.markdown-body p {
+  @apply mb-6;
+}
+
+.markdown-body ul, .markdown-body ol {
+  @apply mb-6 ml-6;
+}
+
+.markdown-body ul {
+  @apply list-disc;
+}
+
+.markdown-body ol {
+  @apply list-decimal;
+}
+
+.markdown-body li {
+  @apply mb-2;
+}
+
+.markdown-body blockquote {
+  @apply my-10 border-l-4 border-primary/20 pl-8 italic text-2xl font-headline text-primary/80;
+}
+
+.markdown-body code {
+  @apply bg-surface-container-high px-1.5 py-0.5 rounded font-mono text-sm;
+}
+
+.markdown-body pre {
+  @apply bg-primary text-white p-6 rounded-lg my-8 overflow-x-auto font-mono text-sm leading-relaxed;
+}
+
+.markdown-body a {
+  @apply text-primary underline decoration-primary/20 hover:decoration-primary transition-all;
+}
+
+.markdown-body img {
+  @apply rounded-xl my-10 w-full;
+}
