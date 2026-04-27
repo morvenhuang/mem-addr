@@ -1,5 +1,4 @@
 import { Link, useLocation } from "react-router-dom";
-import { Search, Settings } from "lucide-react";
 
 export default function Navbar() {
   const location = useLocation();
@@ -32,14 +31,6 @@ export default function Navbar() {
               {link.name}
             </Link>
           ))}
-        </div>
-        <div className="flex items-center space-x-6">
-          <button className="hover:opacity-80 transition-opacity text-primary">
-            <Search className="w-5 h-5" />
-          </button>
-          <button className="hover:opacity-80 transition-opacity text-primary">
-            <Settings className="w-5 h-5" />
-          </button>
         </div>
       </nav>
     </header>

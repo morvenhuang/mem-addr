@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { motion } from "motion/react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Post } from "../types";
+import { Post, Category } from "../types";
 
 export default function Article() {
   const { id } = useParams();
