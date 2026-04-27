@@ -1,0 +1,9 @@
+[
+  { "id": "literature", "name": "Literature", "description": "Exploring the intersection of classical narratives and contemporary intellectual discourse." },
+  { "id": "ai", "name": "AI", "description": "Dissecting the ethical and technical evolution of artificial intelligence." },
+  { "id": "programming", "name": "Programming", "description": "The craft of code, systems architecture, and the philosophy of building digital tools." },
+  { "id": "python", "name": "Python", "description": "Dynamic language for modern systems.", "parentId": "programming" },
+  { "id": "java", "name": "Java", "description": "Robust enterprise applications.", "parentId": "programming" },
+  { "id": "thinking", "name": "Thinking", "description": "Critical analysis of mental models, epistemology, and cognitive biases." },
+  { "id": "life", "name": "Life", "description": "Reflections on intentionality, slow living, and the pursuit of a meaningful existence." }
+]

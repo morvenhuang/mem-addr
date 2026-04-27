@@ -25,80 +25,118 @@ async function startServer() {
   // Serve static uploads
   app.use("/uploads", express.static(uploadsDir));
 
-  // Mock Database
-  const posts = [
-    {
-      id: "architecture-of-silence",
-      title: "The Architecture of Silence: Finding Meaning in the Void.",
-      excerpt: "In an age of fragmented attention, the act of deep reading becomes a radical gesture of intellectual autonomy. We explore how classical literature serves as an anchor.",
-      content: `# The Architecture of Silence
+  // Persistence Setup
+  const dataDir = path.join(process.cwd(), "data");
+  const postsDir = path.join(dataDir, "posts");
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+  if (!fs.existsSync(postsDir)) {
+    fs.mkdirSync(postsDir, { recursive: true });
+  }
 
-To speak of silence is to acknowledge the space between breaths. In our modern digital landscape, the 'void' is often seen as an enemy—a failure of engagement or a loss of signal.
+  const categoriesFile = path.join(dataDir, "categories.json");
 
-## The Monastic Core
+  // Load initial data
+  let posts: any[] = [];
+  let categories: any[] = [];
 
-The monastic corridors of the 12th century weren't designed to be "empty"; they were designed to be containers for resonance. When we strip away the visual noise of the 1px border and the vibrant notification badge, we are returning to a structural hierarchy that relies on tonal depth and spatial intentionality.
+  const loadData = () => {
+    try {
+      // Load Categories
+      if (fs.existsSync(categoriesFile)) {
+        categories = JSON.parse(fs.readFileSync(categoriesFile, "utf-8"));
+      }
 
-> "The world is full of things that are visible. The curator’s task is to make the invisible felt through the deliberate arrangement of absence."
+      // Load Posts (metadata from .json, content from .md)
+      if (fs.existsSync(postsDir)) {
+        const files = fs.readdirSync(postsDir);
+        const jsonFiles = files.filter(f => f.endsWith(".json"));
+        
+        posts = jsonFiles.map(f => {
+          const id = f.replace(".json", "");
+          const jsonPath = path.join(postsDir, f);
+          const mdPath = path.join(postsDir, `${id}.md`);
+          
+          try {
+            const metadata = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
+            
+            // Migration: if content still exists in JSON, move it to MD
+            if (metadata.content) {
+              fs.writeFileSync(mdPath, metadata.content);
+              delete metadata.content;
+              fs.writeFileSync(jsonPath, JSON.stringify(metadata, null, 2));
+              console.log(`Migrated content of ${id} to .md file`);
+            } else if (fs.existsSync(mdPath)) {
+              metadata.content = fs.readFileSync(mdPath, "utf-8");
+            }
+            
+            return metadata;
+          } catch (e) {
+            console.error(`Error loading post ${id}:`, e);
+            return null;
+          }
+        }).filter(p => p !== null);
+        
+        posts.sort((a, b) => {
+          const dateA = new Date(a.date || 0);
+          const dateB = new Date(b.date || 0);
+          return dateB.getTime() - dateA.getTime();
+        });
+      }
 
-### The Geometry of Pause
-
-In typography, we call this white space. In music, we call it the rest. In a gallery, it is the distance between two canvases that allows each to breathe. Without the pause, the message becomes a monochromatic blur. 
-
-* **Focus**: The ability to hold a single thread.
-* **Resonance**: The depth of understanding.
-* **Intentionality**: The choice of what to exclude.
-
-\`\`\`javascript
-const focus = (attention, noise) => attention / noise;
-\`\`\`
-
-Designers are often prohibited from using 1px solid borders to section off the UI in high-end editorial spaces. Why? Because borders create visual noise. Background shifts create visual flow.`,
-      author: "Julian Thorne",
-      category: "LITERATURE",
-      date: "March 24, 2024",
-      readTime: "12 min read",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAglzAaO2AbjnDBaH6BqX3A37FzUAf88r5AgoU0s8CceuMjN93Z8CI2V7YUgkWuZqDrk11t-kzUR1YE4THW4NagITf9I1KdWsS1ym2ROdV24c9AsSbxDDBuaKkWCsev0z_2JL5VhmKCKs5M2n8ov2bYN23dPkPhGwFhiElMTNK3N3iInYkbH506biTaoBJ6V4X40qapq_dAItsiIezPVxfQzIpX6zMeWlKchOw_kQVMz_XXW0q-iGIQq6AJU5WlZ6TN9gX1G6ki5vE",
-      heroImage: "https://lh3.googleusercontent.com/aida-public/AB6AXuDVlR9d-Xv2ZFeeXTryF1gpV9QRGg9cseOCP3ictNiX2RXmjuVg2VQ_li8UtagL9pJErhHb0o06s-5ljx_t7Kx6rA7EIRIQ-G8TX6TN90YW6ZQ8XxCLHKKtG0OIoOm3ztp9_IKHvq5mcJzOcbYrt2CE1XQyB-ZCUq9FkVV-Sx_NB3G9fLYYFof1QXIe8i8CHUlmBgHoXCN66cykcEBcY4jEnj482WHw4SPPWfE3J0OCNCVliYVK_3JjcEQnnMSuLS0FgVe1-Uz10sg"
-    },
-    {
-      id: "ai-philosophy-boundaries",
-      title: "大语言模型的哲学边界：意识与模拟的博弈",
-      excerpt: "Exploring the fine line between sophisticated statistical prediction and the emergence of structural understanding in modern transformers.",
-      content: `# 大语言模型的哲学边界
-
-在复杂的统计预测与现代 Transformer 中结构化理解的出现之间，存在着一条微妙的分界线。
-
-## 意识还是模拟？
-
-我们是在构建能够理解世界的机器，还是仅仅在完善能够完美模仿理解的镜子？
-
-1. **统计概率**: 模型通过预测下一个词来运行。
-2. **潜在空间**: 知识在多维向量中的映射。
-3. **人类感知**: 我们将意识赋予那些看起来聪明的系统。
-
-> '语言是思维的边界，但代码是逻辑的骨架。'
-
-### 技术的诗学
-
-代码不仅仅是逻辑，它是一种新的文学形式——一种构建世界而不仅仅是描述世界的语法。`,
-      author: "Mem Addr",
-      category: "AI",
-      date: "March 24, 2024",
-      readTime: "15 min read",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBs2G3rLTNjhc9x9Dc3TbDuwu1lIL6qU-nNQ9eUgdO2DugU9uPwkMZ0RG-SdGLq6-7pBrCMbWIqnkq6pUcCr5IYkoMvS6gJTB7NG3EDGNVX26Xyv_4iJ_3j7dYUvEpHsp_xyJU8ne1gCxAPLNtp1ES4lLAfZcPljm5ntBFVUfgy5IPuIZGYNCu4Zf744NBuHvEJmp21nM-hInRsSKuJCcRa8-t_z9Ps2hCzMCDuBKkhMM1kkPNaqa3nhKjj8NjdZGn6GirF8T7daSA"
+      // Old legacy migration (posts.json -> individual files)
+      const oldPostsFile = path.join(dataDir, "posts.json");
+      if (fs.existsSync(oldPostsFile) && posts.length === 0) {
+        const oldPosts = JSON.parse(fs.readFileSync(oldPostsFile, "utf-8"));
+        oldPosts.forEach((post: any) => {
+          const { content, ...metadata } = post;
+          fs.writeFileSync(path.join(postsDir, `${post.id}.json`), JSON.stringify(metadata, null, 2));
+          if (content) {
+            fs.writeFileSync(path.join(postsDir, `${post.id}.md`), content);
+          }
+          posts.push(post);
+        });
+        fs.unlinkSync(oldPostsFile);
+      }
+    } catch (err) {
+      console.error("Error loading data:", err);
     }
-  ];
+  };
 
-  const categories = [
-    { id: "literature", name: "Literature", count: 1, description: "Exploring the intersection of classical narratives and contemporary intellectual discourse." },
-    { id: "ai", name: "AI", count: 1, description: "Dissecting the ethical and technical evolution of artificial intelligence." },
-    { id: "programming", name: "Programming", count: 0, description: "The craft of code, systems architecture, and the philosophy of building digital tools." },
-    { id: "python", name: "Python", count: 0, description: "Dynamic language for modern systems.", parentId: "programming" },
-    { id: "java", name: "Java", count: 0, description: "Robust enterprise applications.", parentId: "programming" },
-    { id: "thinking", name: "Thinking", count: 0, description: "Critical analysis of mental models, epistemology, and cognitive biases." },
-    { id: "life", name: "Life", count: 0, description: "Reflections on intentionality, slow living, and the pursuit of a meaningful existence." }
-  ];
+  const saveCategories = () => {
+    try {
+      fs.writeFileSync(categoriesFile, JSON.stringify(categories, null, 2));
+    } catch (err) {
+      console.error("Error saving categories:", err);
+    }
+  };
+
+  const savePost = (post: any) => {
+    try {
+      const { content, ...metadata } = post;
+      const jsonPath = path.join(postsDir, `${post.id}.json`);
+      const mdPath = path.join(postsDir, `${post.id}.md`);
+      
+      fs.writeFileSync(jsonPath, JSON.stringify(metadata, null, 2));
+      fs.writeFileSync(mdPath, content || "");
+    } catch (err) {
+      console.error(`Error saving post ${post.id}:`, err);
+    }
+  };
+
+  const deletePostFile = (id: string) => {
+    try {
+      const jsonPath = path.join(postsDir, `${id}.json`);
+      const mdPath = path.join(postsDir, `${id}.md`);
+      if (fs.existsSync(jsonPath)) fs.unlinkSync(jsonPath);
+      if (fs.existsSync(mdPath)) fs.unlinkSync(mdPath);
+    } catch (err) {
+      console.error(`Error deleting post files ${id}:`, err);
+    }
+  };
+
+  loadData();
 
   // API Routes
   app.get("/api/posts", (req, res) => {
@@ -142,6 +180,7 @@ Designers are often prohibited from using 1px solid borders to section off the U
       count: 0
     };
     categories.push(newCategory);
+    saveCategories();
     res.status(201).json(newCategory);
   });
 
@@ -149,6 +188,7 @@ Designers are often prohibited from using 1px solid borders to section off the U
     const index = categories.findIndex(c => c.id === req.params.id);
     if (index !== -1) {
       categories[index] = { ...categories[index], ...req.body };
+      saveCategories();
       res.json(categories[index]);
     } else {
       res.status(404).json({ message: "Category not found" });
@@ -163,6 +203,7 @@ Designers are often prohibited from using 1px solid borders to section off the U
         if (c.parentId === req.params.id) delete c.parentId;
       });
       categories.splice(index, 1);
+      saveCategories();
       res.status(204).send();
     } else {
       res.status(404).json({ message: "Category not found" });
@@ -170,8 +211,10 @@ Designers are often prohibited from using 1px solid borders to section off the U
   });
 
   app.post("/api/posts", (req, res) => {
-    const newPost = { ...req.body, id: req.body.title.toLowerCase().replace(/\s+/g, '-') };
+    const newId = req.body.title.toLowerCase().replace(/\s+/g, '-');
+    const newPost = { ...req.body, id: newId };
     posts.unshift(newPost);
+    savePost(newPost);
     res.status(201).json(newPost);
   });
 
@@ -179,6 +222,7 @@ Designers are often prohibited from using 1px solid borders to section off the U
     const index = posts.findIndex(p => p.id === req.params.id);
     if (index !== -1) {
       posts[index] = { ...posts[index], ...req.body };
+      savePost(posts[index]);
       res.json(posts[index]);
     } else {
       res.status(404).json({ message: "Post not found" });
@@ -188,13 +232,14 @@ Designers are often prohibited from using 1px solid borders to section off the U
   app.delete("/api/posts/:id", (req, res) => {
     const index = posts.findIndex(p => p.id === req.params.id);
     if (index !== -1) {
+      const postId = posts[index].id;
       posts.splice(index, 1);
+      deletePostFile(postId);
       res.status(204).send();
     } else {
       res.status(404).json({ message: "Post not found" });
     }
   });
-
   app.post("/api/upload", (req, res) => {
     const { image } = req.body;
     if (!image) return res.status(400).json({ message: "No image data" });
