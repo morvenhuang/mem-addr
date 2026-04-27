@@ -223,7 +223,6 @@ export default function AdminEditor() {
             value={formData.excerpt}
             onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
             className="w-full bg-surface-container-low border-none rounded px-4 py-3 text-sm focus:ring-1 focus:ring-primary h-24"
-            required
           />
         </div>
 

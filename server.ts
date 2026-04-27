@@ -112,7 +112,27 @@ Designers are often prohibited from using 1px solid borders to section off the U
   });
 
   app.get("/api/categories", (req, res) => {
-    res.json(categories);
+    // Dynamically calculate counts based on current posts
+    const catsWithCounts = categories.map(cat => {
+      // Helper function to get all descendant IDs
+      const getDescendants = (id: string): string[] => {
+        const searchId = id.toLowerCase();
+        const children = categories.filter(c => (c.parentId || "").toLowerCase() === searchId);
+        let ids = [searchId];
+        children.forEach(child => {
+          ids = [...ids, ...getDescendants(child.id)];
+        });
+        return ids;
+      };
+
+      const descendantIds = getDescendants(cat.id);
+      const postCount = posts.filter(p => 
+        descendantIds.includes((p.category || "").toLowerCase())
+      ).length;
+
+      return { ...cat, count: postCount };
+    });
+    res.json(catsWithCounts);
   });
 
   app.post("/api/categories", (req, res) => {

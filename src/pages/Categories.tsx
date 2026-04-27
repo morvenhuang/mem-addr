@@ -22,15 +22,6 @@ export default function Categories() {
       animate={{ opacity: 1 }}
       className="max-w-7xl mx-auto px-8 pt-12 pb-32"
     >
-      <div className="mb-20">
-        <p className="text-sm font-label uppercase tracking-widest text-on-surface-variant mb-4">
-          The Structural Map
-        </p>
-        <h1 className="font-headline text-5xl md:text-6xl text-primary leading-tight max-w-2xl">
-          Hierarchies of thought & inquiry.
-        </h1>
-      </div>
-
       <div className="space-y-24">
         {rootCategories.map((root) => {
           const children = getSubcategories(root.id);
