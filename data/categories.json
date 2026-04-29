@@ -5,5 +5,7 @@
   { "id": "python", "name": "Python", "description": "Dynamic language for modern systems.", "parentId": "programming" },
   { "id": "java", "name": "Java", "description": "Robust enterprise applications.", "parentId": "programming" },
   { "id": "thinking", "name": "Thinking", "description": "Critical analysis of mental models, epistemology, and cognitive biases." },
+  { "id": "philosophy", "name": "Philosophy", "description": "The study of fundamental questions about existence, knowledge, and values." },
+  { "id": "design", "name": "Design", "description": "The art of intentional structure and aesthetic functionality." },
   { "id": "life", "name": "Life", "description": "Reflections on intentionality, slow living, and the pursuit of a meaningful existence." }
 ]
