@@ -36,16 +36,27 @@ async function startServer() {
   }
 
   const categoriesFile = path.join(dataDir, "categories.json");
+  const profileFile = path.join(dataDir, "profile.json");
 
   // Load initial data
   let posts: any[] = [];
   let categories: any[] = [];
+  let profile: any = {
+    name: "Morven",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=800&auto=format&fit=crop",
+    bio: "A lover of classical Chinese poetry and calligraphy, a data nomad wandering through bits and bytes, a traditional programmer and a vibe coder."
+  };
 
   const loadData = () => {
     try {
       // Load Categories
       if (fs.existsSync(categoriesFile)) {
         categories = JSON.parse(fs.readFileSync(categoriesFile, "utf-8"));
+      }
+
+      // Load Profile
+      if (fs.existsSync(profileFile)) {
+        profile = JSON.parse(fs.readFileSync(profileFile, "utf-8"));
       }
 
       // Load Posts (metadata from .json, content from .md)
@@ -240,6 +251,17 @@ async function startServer() {
       res.status(404).json({ message: "Post not found" });
     }
   });
+
+  app.get("/api/profile", (req, res) => {
+    res.json(profile);
+  });
+
+  app.put("/api/profile", (req, res) => {
+    profile = { ...profile, ...req.body };
+    fs.writeFileSync(profileFile, JSON.stringify(profile, null, 2));
+    res.json(profile);
+  });
+
   app.post("/api/upload", (req, res) => {
     const { image } = req.body;
     if (!image) return res.status(400).json({ message: "No image data" });

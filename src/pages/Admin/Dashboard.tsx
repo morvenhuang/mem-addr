@@ -6,6 +6,8 @@ import { Post } from "../../types";
 
 export default function AdminDashboard() {
   const [posts, setPosts] = useState<Post[]>([]);
+  const [profile, setProfile] = useState<any>(null);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -14,6 +16,7 @@ export default function AdminDashboard() {
       return;
     }
     fetchPosts();
+    fetchProfile();
   }, [navigate]);
 
   const fetchPosts = () => {
@@ -22,9 +25,46 @@ export default function AdminDashboard() {
       .then(setPosts);
   };
 
+  const fetchProfile = () => {
+    fetch("/api/profile")
+      .then((res) => res.json())
+      .then(setProfile);
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("admin_auth");
     navigate("/admin/login");
+  };
+
+  const handleSaveProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    fetch("/api/profile", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(profile),
+    }).then(() => {
+      setIsEditingProfile(false);
+      fetchProfile();
+    });
+  };
+
+  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: reader.result }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          setProfile({ ...profile, avatar: data.url });
+        });
+    };
+    reader.readAsDataURL(file);
   };
 
   const deletePost = (id: string) => {
@@ -48,6 +88,12 @@ export default function AdminDashboard() {
           <h1 className="font-headline text-5xl text-primary">Content Repository</h1>
         </div>
         <div className="flex gap-4">
+          <button
+            onClick={() => setIsEditingProfile(!isEditingProfile)}
+            className="flex items-center gap-2 bg-surface-container-high text-primary px-6 py-3 rounded font-label text-xs font-bold tracking-widest uppercase hover:opacity-90 transition-all border border-outline-variant/10"
+          >
+            <Settings className="w-4 h-4" /> {isEditingProfile ? "View Repository" : "Profile Settings"}
+          </button>
           <Link
             to="/admin/categories"
             className="flex items-center gap-2 bg-surface-container-high text-primary px-6 py-3 rounded font-label text-xs font-bold tracking-widest uppercase hover:opacity-90 transition-all border border-outline-variant/10"
@@ -68,8 +114,60 @@ export default function AdminDashboard() {
           </button>
         </div>
       </div>
+      
+      {isEditingProfile && profile ? (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-surface-container-low rounded-xl p-8 max-w-2xl mx-auto border border-outline-variant/10"
+        >
+          <div className="flex items-center gap-8 mb-12">
+            <div className="relative group">
+              <div className="w-32 h-32 rounded-full overflow-hidden bg-surface-container-high border-2 border-primary/10">
+                <img src={profile.avatar} alt="Avatar" className="w-full h-full object-cover" />
+              </div>
+              <label className="absolute inset-0 flex items-center justify-center bg-black/40 text-white opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity rounded-full">
+                <Edit2 className="w-6 h-6" />
+                <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} />
+              </label>
+            </div>
+            <div>
+              <h2 className="font-headline text-2xl text-primary mb-1">Author Identity</h2>
+              <p className="text-sm text-on-surface-variant font-label uppercase tracking-widest">Digital Persona Management</p>
+            </div>
+          </div>
 
-      <div className="bg-surface-container-low rounded-xl overflow-hidden">
+          <form onSubmit={handleSaveProfile} className="space-y-6">
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Display Name</label>
+              <input
+                type="text"
+                value={profile.name}
+                onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded px-4 py-3 text-primary focus:outline-none focus:border-primary/50"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Biographical Fragment</label>
+              <textarea
+                value={profile.bio}
+                onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+                rows={4}
+                className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded px-4 py-3 text-primary focus:outline-none focus:border-primary/50 resize-none leading-relaxed"
+              />
+            </div>
+            <div className="pt-4">
+              <button
+                type="submit"
+                className="w-full bg-primary text-white py-4 rounded font-label text-xs font-bold tracking-widest uppercase hover:opacity-90 transition-all shadow-lg shadow-primary/10"
+              >
+                Update Identity
+              </button>
+            </div>
+          </form>
+        </motion.div>
+      ) : (
+        <div className="bg-surface-container-low rounded-xl overflow-hidden">
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-outline-variant/10">
@@ -123,6 +221,7 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
+    )}
     </motion.div>
   );
 }

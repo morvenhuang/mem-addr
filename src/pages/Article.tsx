@@ -92,27 +92,6 @@ export default function Article() {
           ))}
         </div>
 
-        {/* Author Card */}
-        <section className="mt-24 p-8 bg-surface-container-lowest rounded-xl flex flex-col md:flex-row gap-8 items-start md:items-center">
-          <div className="w-24 h-24 rounded-full overflow-hidden shrink-0">
-            <img
-              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e"
-              alt="Julian Thorne"
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div>
-            <h4 className="font-headline text-xl text-primary mb-2">Written by {post.author}</h4>
-            <p className="text-on-surface-variant text-sm leading-relaxed mb-4">
-              Julian is the Editorial Director of Mem Addr. His work explores the intersection of classical aesthetics and modern interface theory. He believes in the power of slow reading in a fast world.
-            </p>
-            <div className="flex gap-4">
-              <a href="#" className="text-xs font-bold text-primary uppercase tracking-tighter hover:opacity-70">Twitter</a>
-              <a href="#" className="text-xs font-bold text-primary uppercase tracking-tighter hover:opacity-70">Newsletter</a>
-            </div>
-          </div>
-        </section>
-
         {/* Post Nav */}
         <nav className="mt-32 pt-12 border-t border-outline-variant/10">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8">
