@@ -1,0 +1,10 @@
+{
+  "id": "the-art-of-refactoring",
+  "title": "The Art of Refactoring",
+  "excerpt": "Refactoring is not just about cleaning code—it is a disciplined practice of continuous design that keeps software alive and adaptable.",
+  "category": "programming",
+  "date": "2024-02-10",
+  "author": "Morven",
+  "readTime": "6 min",
+  "image": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=800&auto=format&fit=crop"
+}
