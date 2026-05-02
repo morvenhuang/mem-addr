@@ -23,7 +23,6 @@ async function startServer() {
   }
 
   // Serve static uploads
-  app.use("/uploads", express.static(uploadsDir));
 
   // Persistence Setup
   const dataDir = path.join(process.cwd(), "data");
@@ -287,7 +286,44 @@ async function startServer() {
     }
     savePassword(newPassword);
     res.json({ success: true });
-  });  // Vite middleware for development
+
+  app.get("/api/unsplash/search", async (req, res) => {
+    const query = req.query.query as string;
+    const accessKey = process.env.UNSPLASH_ACCESS_KEY;
+    if (!query) return res.status(400).json({ message: "Query required" });
+    if (!accessKey) return res.status(500).json({ message: "UNSPLASH_ACCESS_KEY not configured on server" });
+    try {
+      const params = new URLSearchParams({
+        query,
+        per_page: "12",
+        orientation: "landscape",
+      });
+      const apiRes = await fetch(`https://api.unsplash.com/search/photos?${params}`, {
+        headers: { Authorization: `Client-ID ${accessKey}` },
+      });
+      if (!apiRes.ok) {
+        return res.status(apiRes.status).json({ message: "Unsplash API error" });
+      }
+      const data = await apiRes.json();
+      const results = (data.results || []).map((img: any) => ({
+        id: img.id,
+        description: img.description || img.alt_description || "",
+        thumb: img.urls.thumb,
+        small: img.urls.small,
+        regular: img.urls.regular,
+        full: img.urls.full,
+        raw: img.urls.raw,
+        author: img.user.name,
+        authorLink: img.user.links.html,
+        width: img.width,
+        height: img.height,
+      }));
+      res.json({ results, total: data.total });
+    } catch (err) {
+      console.error("Unsplash search error:", err);
+      res.status(500).json({ message: "Search failed" });
+    }
+  });  });  // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },

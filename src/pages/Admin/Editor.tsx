@@ -1,10 +1,24 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "motion/react";
-import { ArrowLeft, Save, Eye, Edit3, Upload, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Save, Eye, Edit3, Upload, Image as ImageIcon, Search, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Post, Category } from "../../types";
+
+interface UnsplashPhoto {
+  id: string;
+  description: string;
+  thumb: string;
+  small: string;
+  regular: string;
+  full: string;
+  raw: string;
+  author: string;
+  authorLink: string;
+  width: number;
+  height: number;
+}
 
 export default function AdminEditor() {
   const { id } = useParams();
@@ -19,11 +33,19 @@ export default function AdminEditor() {
     title: "",
     excerpt: "",
     content: "",
-    author: "Julian Thorne",
-    category: "literature",
-    image: "https://images.unsplash.com/photo-1516979187457-637abb4f9353",
+    author: "Morven",
+    category: "ai",
+    image: "",
     readTime: "10 min read"
   });
+
+  // Unsplash search modal state
+  const [showUnsplash, setShowUnsplash] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<UnsplashPhoto[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<UnsplashPhoto | null>(null);
+  const [searchError, setSearchError] = useState("");
 
   useEffect(() => {
     if (localStorage.getItem("admin_auth") !== "true") {
@@ -97,13 +119,57 @@ export default function AdminEditor() {
     }
   };
 
+  const buildUnsplashUrl = (raw: string, w: number) => {
+    return `${raw}&w=${w}&q=85&auto=format&fit=crop&crop=entropy`;
+  };
+
+  const handleUnsplashSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    setSearchLoading(true);
+    setSearchError("");
+    try {
+      const res = await fetch(`/api/unsplash/search?query=${encodeURIComponent(searchQuery.trim())}`);
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.message || "Search failed");
+      }
+      const data = await res.json();
+      setSearchResults(data.results || []);
+      if (data.results?.length === 0) setSearchError("No results found");
+    } catch (err: any) {
+      setSearchError(err.message || "Search failed");
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const handleSelectPhoto = (photo: UnsplashPhoto) => {
+    setSelectedPhoto(photo);
+  };
+
+  const handleConfirmPhoto = () => {
+    if (!selectedPhoto) return;
+    const url = buildUnsplashUrl(selectedPhoto.raw, 1600);
+    setFormData({ ...formData, image: url });
+    setShowUnsplash(false);
+    setSelectedPhoto(null);
+    setSearchQuery("");
+    setSearchResults([]);
+  };
+
+  const handleCloseUnsplash = () => {
+    setShowUnsplash(false);
+    setSelectedPhoto(null);
+    setSearchQuery("");
+    setSearchResults([]);
+    setSearchError("");
+  };
+
   const getCategoryPath = (categoryId?: string): string => {
     if (!categoryId) return "";
     const cat = categories.find(c => c.id === categoryId);
     if (!cat) return categoryId;
-    if (cat.parentId) {
-      return `${getCategoryPath(cat.parentId)} / ${cat.name}`;
-    }
     return cat.name;
   };
 
@@ -203,6 +269,14 @@ export default function AdminEditor() {
                 >
                   <Upload className="w-5 h-5" />
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setShowUnsplash(true)}
+                  className="bg-primary/5 text-primary p-3 rounded hover:bg-primary/10 transition-colors border border-primary/10"
+                  title="Search Unsplash"
+                >
+                  <Search className="w-5 h-5" />
+                </button>
               </div>
             </div>
             <div>
@@ -277,6 +351,116 @@ export default function AdminEditor() {
           </button>
         </div>
       </form>
+
+      {/* Unsplash Search Modal */}
+      {showUnsplash && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={handleCloseUnsplash}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-8 py-6 border-b border-outline-variant/10">
+              <h2 className="font-headline text-2xl text-primary">Search Unsplash</h2>
+              <button
+                type="button"
+                onClick={handleCloseUnsplash}
+                className="p-2 rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Search bar */}
+            <form onSubmit={handleUnsplashSearch} className="px-8 py-4 border-b border-outline-variant/5">
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search keywords (space-separated)..."
+                  className="flex-grow bg-surface-container-low border-none rounded-lg px-4 py-3 text-sm focus:ring-1 focus:ring-primary"
+                  autoFocus
+                />
+                <button
+                  type="submit"
+                  disabled={searchLoading}
+                  className="bg-primary text-white px-6 py-3 rounded-lg font-label text-xs font-bold tracking-widest uppercase hover:opacity-90 transition-all disabled:opacity-50"
+                >
+                  {searchLoading ? "Searching..." : "Search"}
+                </button>
+              </div>
+            </form>
+
+            {/* Results */}
+            <div className="flex-1 overflow-y-auto px-8 py-6">
+              {searchError && (
+                <p className="text-on-surface-variant/60 text-center py-12 font-label uppercase tracking-widest text-xs">{searchError}</p>
+              )}
+
+              {searchResults.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {searchResults.map((photo) => (
+                    <button
+                      key={photo.id}
+                      type="button"
+                      onClick={() => handleSelectPhoto(photo)}
+                      className={`relative aspect-[16/9] rounded-lg overflow-hidden group focus:outline-none ${
+                        selectedPhoto?.id === photo.id
+                          ? "ring-2 ring-primary ring-offset-2 ring-offset-surface-container-lowest"
+                          : "hover:ring-1 hover:ring-primary/30"
+                      }`}
+                    >
+                      <img
+                        src={photo.small}
+                        alt={photo.description}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <p className="text-white text-[10px] font-label uppercase tracking-wider truncate">
+                          {photo.author}
+                        </p>
+                      </div>
+                      {selectedPhoto?.id === photo.id && (
+                        <div className="absolute top-2 right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {searchResults.length === 0 && !searchError && (
+                <p className="text-on-surface-variant/40 text-center py-12 font-label uppercase tracking-widest text-xs">
+                  Enter keywords and press Search to discover images
+                </p>
+              )}
+            </div>
+
+            {/* Footer with confirm button */}
+            {searchResults.length > 0 && (
+              <div className="px-8 py-4 border-t border-outline-variant/10 flex justify-between items-center">
+                <p className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/50">
+                  {selectedPhoto ? `Selected: ${selectedPhoto.author}` : "Select an image above"}
+                </p>
+                <button
+                  type="button"
+                  onClick={handleConfirmPhoto}
+                  disabled={!selectedPhoto}
+                  className="bg-primary text-white px-8 py-3 rounded-lg font-label text-xs font-bold tracking-widest uppercase hover:opacity-90 transition-all disabled:opacity-30"
+                >
+                  Confirm & Use This Image
+                </button>
+              </div>
+            )}
+          </motion.div>
+        </div>
+      )}
     </motion.div>
   );
 }
