@@ -123,13 +123,13 @@ export default function AdminDashboard() {
             to="/admin/categories"
             className="flex items-center gap-2 bg-surface-container-high text-primary px-6 py-3 rounded font-label text-xs font-bold tracking-widest uppercase hover:opacity-90 transition-all border border-outline-variant/10"
           >
-            <FolderTree className="w-4 h-4" /> Hierarchies
+            <FolderTree className="w-4 h-4" /> Categories
           </Link>
           <Link
             to="/admin/editor"
             className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded font-label text-xs font-bold tracking-widest uppercase hover:opacity-90 transition-all"
           >
-            <Plus className="w-4 h-4" /> New Entry
+            <Plus className="w-4 h-4" /> New Article
           </Link>
           <button
             onClick={handleLogout}
