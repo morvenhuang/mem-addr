@@ -8,12 +8,19 @@ import { Post, Category } from "../types";
 export default function Article() {
   const { id } = useParams();
   const [post, setPost] = useState<Post | null>(null);
+  const [allPosts, setAllPosts] = useState<Post[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
     fetch(`/api/posts/${id}`)
       .then((res) => res.json())
       .then(setPost);
+    fetch("/api/posts")
+      .then((res) => res.json())
+      .then((posts: Post[]) => {
+        posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        setAllPosts(posts);
+      });
     fetch("/api/categories")
       .then((res) => res.json())
       .then(setCategories);
@@ -22,6 +29,16 @@ export default function Article() {
   const getCategoryName = (catId: string) => {
     return categories.find(c => c.id === catId)?.name || catId;
   };
+
+  const currentIndex = allPosts.findIndex(p => p.id === id);
+  const prevPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
+  const nextPost = currentIndex >= 0 && currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
+
+  const articleTags = (() => {
+    if (!post) return [];
+    const cat = categories.find(c => c.id === post.category);
+    return cat ? [cat.name] : [post.category];
+  })();
 
   if (!post) return <div className="h-screen flex items-center justify-center font-headline">Distilling signal...</div>;
 
@@ -83,30 +100,32 @@ export default function Article() {
           </ReactMarkdown>
         </div>
 
-        {/* Tags */}
         <div className="mt-20 flex flex-wrap gap-2">
-          {["PHILOSOPHY", "DESIGN", "SYSTEMS"].map(tag => (
+          {articleTags.map(tag => (
             <span key={tag} className="px-3 py-1 bg-surface-container-high text-[0.65rem] font-bold tracking-widest uppercase text-primary font-label">
               #{tag}
             </span>
           ))}
         </div>
 
-        {/* Post Nav */}
         <nav className="mt-32 pt-12 border-t border-outline-variant/10">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-            <Link to="#" className="group max-w-xs">
-              <span className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-on-surface-variant mb-2 block">Previous Article</span>
-              <h5 className="text-xl font-headline text-primary group-hover:text-secondary transition-colors">
-                The Digital Tactile: Textures in Code
-              </h5>
-            </Link>
-            <Link to="#" className="group text-right max-w-xs">
-              <span className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-on-surface-variant mb-2 block">Next Article</span>
-              <h5 className="text-xl font-headline text-primary group-hover:text-secondary transition-colors">
-                Ephemeral Archives and the Cloud
-              </h5>
-            </Link>
+            <div className="max-w-xs">
+              {prevPost ? (
+                <Link to={`/article/${prevPost.id}`} className="group block">
+                  <span className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-on-surface-variant mb-2 block">Previous Article</span>
+                  <h5 className="text-xl font-headline text-primary group-hover:text-secondary transition-colors">{prevPost.title}</h5>
+                </Link>
+              ) : <span className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-on-surface-variant/40">First Article</span>}
+            </div>
+            <div className="max-w-xs text-right">
+              {nextPost ? (
+                <Link to={`/article/${nextPost.id}`} className="group block">
+                  <span className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-on-surface-variant mb-2 block">Next Article</span>
+                  <h5 className="text-xl font-headline text-primary group-hover:text-secondary transition-colors">{nextPost.title}</h5>
+                </Link>
+              ) : <span className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-on-surface-variant/40">Latest Article</span>}
+            </div>
           </div>
         </nav>
       </section>
