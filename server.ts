@@ -171,24 +171,8 @@ async function startServer() {
   });
 
   app.get("/api/categories", (req, res) => {
-    // Dynamically calculate counts based on current posts
     const catsWithCounts = categories.map(cat => {
-      // Helper function to get all descendant IDs
-      const getDescendants = (id: string): string[] => {
-        const searchId = id.toLowerCase();
-        const children = categories.filter(c => (c.parentId || "").toLowerCase() === searchId);
-        let ids = [searchId];
-        children.forEach(child => {
-          ids = [...ids, ...getDescendants(child.id)];
-        });
-        return ids;
-      };
-
-      const descendantIds = getDescendants(cat.id);
-      const postCount = posts.filter(p => 
-        descendantIds.includes((p.category || "").toLowerCase())
-      ).length;
-
+      const postCount = posts.filter(p => (p.category || "").toLowerCase() === cat.id.toLowerCase()).length;
       return { ...cat, count: postCount };
     });
     res.json(catsWithCounts);
@@ -219,10 +203,7 @@ async function startServer() {
   app.delete("/api/categories/:id", (req, res) => {
     const index = categories.findIndex(c => c.id === req.params.id);
     if (index !== -1) {
-      // Also clear parentId of children
-      categories.forEach(c => {
-        if (c.parentId === req.params.id) delete c.parentId;
-      });
+      
       categories.splice(index, 1);
       saveCategories();
       res.status(204).send();

@@ -27,29 +27,8 @@ export default function Home() {
     return categories.find((c) => c.id.toLowerCase() === id.toLowerCase())?.name || id;
   };
 
-  const getDescendantCategoryIds = (id: string, allCats: Category[]): string[] => {
-    const searchId = id.toLowerCase();
-    const children = allCats.filter((c) => (c.parentId || "").toLowerCase() === searchId);
-    let ids = [searchId];
-    children.forEach((child) => {
-      ids = [...ids, ...getDescendantCategoryIds(child.id, allCats)];
-    });
-    return ids;
-  };
-
-  const currentAllowedIds = categoryId ? getDescendantCategoryIds(categoryId, categories) : [];
-  
-  const subcategories = categoryId
-    ? categories.filter((c) => (c.parentId || "").toLowerCase() === categoryId.toLowerCase())
-    : [];
-
-  const getPostCountForCategory = (catId: string) => {
-    const ids = getDescendantCategoryIds(catId, categories);
-    return posts.filter((p) => ids.includes((p.category || "").toLowerCase())).length;
-  };
-
   const filteredPosts = categoryId
-    ? posts.filter((p) => currentAllowedIds.includes((p.category || "").toLowerCase()))
+    ? posts.filter((p) => (p.category || "").toLowerCase() === categoryId.toLowerCase())
     : posts;
 
   if (loading) {
@@ -78,26 +57,6 @@ export default function Home() {
               Reset Signal
             </Link>
           </div>
-
-          {subcategories.length > 0 && (
-            <div className="mb-16">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant/50 mb-6">Sub-domains of Inquiry</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {subcategories.map(sub => (
-                  <Link 
-                    key={sub.id} 
-                    to={`/category/${sub.id}`}
-                    className="p-6 rounded-xl bg-surface-container-low hover:bg-surface-container-high transition-all group"
-                  >
-                    <h3 className="font-headline text-lg text-primary mb-1 group-hover:translate-x-1 transition-transform">{sub.name}</h3>
-                    <p className="text-[10px] text-on-surface-variant/60 uppercase tracking-widest">
-                      {getPostCountForCategory(sub.id)} Archives
-                    </p>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       )}
 

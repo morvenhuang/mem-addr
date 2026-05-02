@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
-import { ArrowLeft, Plus, Edit2, Trash2, Save, X, FolderTree } from "lucide-react";
+import { ArrowLeft, Plus, Edit2, Trash2, Save, X } from "lucide-react";
 import { Category } from "../../types";
 
 export default function AdminCategories() {
@@ -52,7 +52,7 @@ export default function AdminCategories() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure? Subcategories will become top-level categories.")) return;
+    if (!confirm("Are you sure you want to delete this category?")) return;
 
     try {
       const response = await fetch(`/api/categories/${id}`, {
@@ -65,16 +65,6 @@ export default function AdminCategories() {
     } catch (err) {
       console.error(err);
     }
-  };
-
-  const getCategoryPath = (categoryId?: string): string => {
-    if (!categoryId) return "";
-    const cat = categories.find(c => c.id === categoryId);
-    if (!cat) return "";
-    if (cat.parentId) {
-      return `${getCategoryPath(cat.parentId)} / ${cat.name}`;
-    }
-    return cat.name;
   };
 
   if (isLoading) return null;
@@ -96,7 +86,7 @@ export default function AdminCategories() {
         <button
           onClick={() => {
             setShowAddForm(true);
-            setEditFormData({ name: "", description: "", parentId: "" });
+            setEditFormData({ name: "", description: "" });
           }}
           className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded font-label text-xs font-bold tracking-widest uppercase hover:opacity-90 transition-all shadow-lg shadow-primary/20"
         >
@@ -105,45 +95,30 @@ export default function AdminCategories() {
       </div>
 
       <div className="mb-16">
-        <h1 className="font-headline text-5xl text-primary mb-4 flex items-center gap-4">
-          Hierarchies <FolderTree className="w-10 h-10 text-primary/20" />
-        </h1>
+        <h1 className="font-headline text-5xl text-primary mb-4">Categories</h1>
         <p className="text-on-surface-variant/70 max-w-2xl">
-          Organize your archives through multi-level classification. Relational structures provide depth to the reader's journey.
+          Manage the classification domains for your archives.
         </p>
       </div>
 
       {showAddForm && (
         <div className="bg-surface-container-low p-8 rounded-xl border border-primary/10 mb-12">
-          <h2 className="font-headline text-2xl text-primary mb-6">Initial Definition</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <h2 className="font-headline text-2xl text-primary mb-6">New Category</h2>
+          <div className="grid grid-cols-1 gap-6">
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Category Name</label>
               <input
                 type="text"
-                value={editFormData.name}
+                value={editFormData.name || ""}
                 onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
                 className="w-full bg-surface-container-lowest border-none rounded px-4 py-3 text-sm focus:ring-1 focus:ring-primary"
-                placeholder="e.g. Systems Programming"
+                placeholder="e.g., Programming"
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Parent Context</label>
-              <select
-                value={editFormData.parentId || ""}
-                onChange={(e) => setEditFormData({ ...editFormData, parentId: e.target.value || undefined })}
-                className="w-full bg-surface-container-lowest border-none rounded px-4 py-3 text-sm focus:ring-1 focus:ring-primary"
-              >
-                <option value="">Root Hierarchy</option>
-                {categories.map(c => (
-                  <option key={c.id} value={c.id}>{getCategoryPath(c.id)}</option>
-                ))}
-              </select>
-            </div>
-            <div className="md:col-span-2">
               <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Description</label>
               <textarea
-                value={editFormData.description}
+                value={editFormData.description || ""}
                 onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
                 className="w-full bg-surface-container-lowest border-none rounded px-4 py-3 text-sm focus:ring-1 focus:ring-primary h-24"
               />
@@ -160,7 +135,7 @@ export default function AdminCategories() {
               onClick={() => handleSave()}
               className="bg-primary text-white px-6 py-3 rounded font-label text-[10px] font-bold tracking-widest uppercase hover:opacity-90 transition-all"
             >
-              Archive Entry
+              Add Category
             </button>
           </div>
         </div>
@@ -170,7 +145,7 @@ export default function AdminCategories() {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-surface-container border-b border-outline-variant/10">
-              <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant/70">Structural Path</th>
+              <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant/70">Name</th>
               <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant/70">Posts</th>
               <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant/70">Description</th>
               <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant/70 text-right">Actions</th>
@@ -181,51 +156,23 @@ export default function AdminCategories() {
               <tr key={category.id} className="border-b border-outline-variant/5 hover:bg-surface-container-high/30 transition-colors">
                 <td className="px-8 py-6">
                   {isEditing === category.id ? (
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-[8px] font-bold uppercase tracking-widest text-on-surface-variant/50 mb-1">Name</label>
-                        <input
-                          type="text"
-                          value={editFormData.name}
-                          onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                          className="bg-surface-container-lowest border-none rounded px-3 py-2 text-sm focus:ring-1 focus:ring-primary w-full font-bold"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[8px] font-bold uppercase tracking-widest text-on-surface-variant/50 mb-1">Parent Category</label>
-                        <select
-                          value={editFormData.parentId || ""}
-                          onChange={(e) => setEditFormData({ ...editFormData, parentId: e.target.value || undefined })}
-                          className="bg-surface-container-lowest border-none rounded px-3 py-2 text-xs focus:ring-1 focus:ring-primary w-full"
-                        >
-                          <option value="">Root Level</option>
-                          {categories
-                            .filter(c => c.id !== category.id) // Prevent self-parenting
-                            .map(c => (
-                              <option key={c.id} value={c.id}>{getCategoryPath(c.id)}</option>
-                            ))
-                          }
-                        </select>
-                      </div>
-                    </div>
+                    <input
+                      type="text"
+                      value={editFormData.name || ""}
+                      onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                      className="bg-surface-container-lowest border-none rounded px-3 py-2 text-sm focus:ring-1 focus:ring-primary w-full font-bold"
+                    />
                   ) : (
-                    <div className="flex flex-col">
-                      <span className="text-primary font-bold">{category.name}</span>
-                      {category.parentId && (
-                        <span className="text-[10px] uppercase tracking-wider text-on-surface-variant/50">
-                          {getCategoryPath(category.parentId)} /
-                        </span>
-                      )}
-                    </div>
+                    <span className="text-primary font-bold">{category.name}</span>
                   )}
                 </td>
                 <td className="px-8 py-6">
-                  <span className="font-mono text-sm text-on-surface-variant">{category.count} items</span>
+                  <span className="font-mono text-sm text-on-surface-variant">{category.count} item{category.count !== 1 ? "s" : ""}</span>
                 </td>
                 <td className="px-8 py-6 max-w-md">
                   {isEditing === category.id ? (
                     <textarea
-                      value={editFormData.description}
+                      value={editFormData.description || ""}
                       onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
                       className="bg-surface-container-lowest border-none rounded px-3 py-2 text-sm focus:ring-1 focus:ring-primary w-full h-20"
                     />

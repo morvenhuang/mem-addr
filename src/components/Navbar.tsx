@@ -14,9 +14,6 @@ export default function Navbar() {
   const navLinks = [
     { name: "Home", path: "/" },
     { name: "Categories", path: "/categories" },
-    { name: "AI", path: "/category/ai" },
-    { name: "Programming", path: "/category/programming" },
-    { name: "Literature", path: "/category/literature" },
     { name: "About", path: "/about" },
     { name: "Admin", path: "/admin/login" },
   ];
