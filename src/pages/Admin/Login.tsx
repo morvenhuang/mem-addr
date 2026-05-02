@@ -5,15 +5,30 @@ import { Lock } from "lucide-react";
 
 export default function AdminLogin() {
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === "admin123") { // Simple mock auth
-      localStorage.setItem("admin_auth", "true");
-      navigate("/admin/dashboard");
-    } else {
-      alert("Invalid credentials. Hint: admin123");
+    setError("");
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      if (res.ok) {
+        localStorage.setItem("admin_auth", "true");
+        navigate("/admin/dashboard");
+      } else {
+        setError("Invalid passphrase");
+      }
+    } catch {
+      setError("Server unreachable");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -46,12 +61,16 @@ export default function AdminLogin() {
               className="w-full bg-surface-container-low border-none rounded px-4 py-3 text-sm focus:ring-1 focus:ring-primary"
               placeholder="••••••••"
             />
+            {error && (
+              <p className="text-red-500 text-xs mt-2 font-label uppercase tracking-wide">{error}</p>
+            )}
           </div>
           <button
             type="submit"
-            className="w-full bg-primary text-white py-3 rounded font-label text-xs font-bold tracking-widest uppercase hover:opacity-90 transition-opacity"
+            disabled={loading}
+            className="w-full bg-primary text-white py-3 rounded font-label text-xs font-bold tracking-widest uppercase hover:opacity-90 transition-opacity disabled:opacity-50"
           >
-            Access Repository
+            {loading ? "Verifying..." : "Access Repository"}
           </button>
         </form>
       </motion.div>

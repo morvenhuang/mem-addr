@@ -39,6 +39,7 @@ async function startServer() {
   const profileFile = path.join(dataDir, "profile.json");
 
   // Load initial data
+  const passwordFile = path.join(dataDir, "password.json");
   let posts: any[] = [];
   let categories: any[] = [];
   let profile: any = {
@@ -46,6 +47,15 @@ async function startServer() {
     avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=800&auto=format&fit=crop",
     bio: "A lover of classical Chinese poetry and calligraphy, a data nomad wandering through bits and bytes, a traditional programmer and a vibe coder."
   };
+
+  const loadPassword = (): string => {
+    try {
+      return fs.existsSync(passwordFile)
+        ? JSON.parse(fs.readFileSync(passwordFile, "utf-8")).password
+        : "admin123";
+    } catch { return "admin123"; }
+  };
+    const savePassword = (pw: string) => fs.writeFileSync(passwordFile, JSON.stringify({ password: pw }, null, 2));
 
   const loadData = () => {
     try {
@@ -280,7 +290,23 @@ async function startServer() {
     }
   });
 
-  // Vite middleware for development
+
+  app.post("/api/auth/login", (req, res) => {
+    const { password } = req.body;
+    if (password === loadPassword()) {
+      return res.json({ success: true });
+    }
+    res.status(401).json({ success: false });
+  });
+
+  app.put("/api/auth/password", (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    if (currentPassword !== loadPassword()) {
+      return res.status(403).json({ message: "Current password is incorrect" });
+    }
+    savePassword(newPassword);
+    res.json({ success: true });
+  });  // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },

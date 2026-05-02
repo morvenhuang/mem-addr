@@ -8,6 +8,9 @@ export default function AdminDashboard() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [profile, setProfile] = useState<any>(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({ current: "", new: "" });
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -65,6 +68,28 @@ export default function AdminDashboard() {
         });
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError("");
+    setPasswordSuccess(false);
+    try {
+      const res = await fetch("/api/auth/password", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword: passwordForm.current, newPassword: passwordForm.new }),
+      });
+      if (res.ok) {
+        setPasswordSuccess(true);
+        setPasswordForm({ current: "", new: "" });
+      } else {
+        const data = await res.json();
+        setPasswordError(data.message || "Failed to update password");
+      }
+    } catch {
+      setPasswordError("Server unreachable");
+    }
   };
 
   const deletePost = (id: string) => {
@@ -164,6 +189,41 @@ export default function AdminDashboard() {
                 Update Identity
               </button>
             </div>
+          </form>
+
+          <hr className="border-outline-variant/10 my-8" />
+
+          <form onSubmit={handleChangePassword} className="space-y-4">
+            <h3 className="font-headline text-lg text-primary mb-1">Change Passphrase</h3>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60 mb-4">Update your curator gate credentials</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Current Passphrase</label>
+                <input
+                  type="password"
+                  value={passwordForm.current}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
+                  className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded px-4 py-3 text-primary focus:outline-none focus:border-primary/50"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">New Passphrase</label>
+                <input
+                  type="password"
+                  value={passwordForm.new}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
+                  className="w-full bg-surface-container-lowest border border-outline-variant/20 rounded px-4 py-3 text-primary focus:outline-none focus:border-primary/50"
+                />
+              </div>
+            </div>
+            {passwordError && <p className="text-red-500 text-xs mb-3 font-label uppercase tracking-wide">{passwordError}</p>}
+            {passwordSuccess && <p className="text-green-500 text-xs mb-3 font-label uppercase tracking-wide">Passphrase updated successfully</p>}
+            <button
+              type="submit"
+              className="w-full border border-outline-variant/20 text-primary py-3 rounded font-label text-xs font-bold tracking-widest uppercase hover:bg-primary/5 transition-all"
+            >
+              Update Passphrase
+            </button>
           </form>
         </motion.div>
       ) : (
