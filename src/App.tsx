@@ -22,7 +22,7 @@ export default function App() {
             <Route path="/article/:id" element={<Article />} />
             <Route path="/about" element={<About />} />
             <Route path="/category/:id" element={<Home />} />
-            
+            <Route path="/tag/:tagName" element={<Home />} />            
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />

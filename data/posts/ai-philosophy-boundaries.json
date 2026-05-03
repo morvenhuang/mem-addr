@@ -3,8 +3,11 @@
   "title": "AI Philosophy: Boundaries of Being",
   "excerpt": "Exploring the ethical contours of machine consciousness and the shifting definitions of what it means to be human in an automated age.",
   "category": "ai",
-  "date": "2024-03-15",
+  "date": "May 3, 2026",
   "author": "Morven",
   "readTime": "8 min",
-  "image": "https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=800&auto=format&fit=crop"
+  "image": "https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=800&auto=format&fit=crop",
+  "tags": [
+    "FOOBAR"
+  ]
 }

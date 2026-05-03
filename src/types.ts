@@ -9,7 +9,7 @@ export interface Post {
   readTime: string;
   image: string;
   heroImage?: string;
-}
+  tags?: string[];}
 
 export interface Category {
   id: string;

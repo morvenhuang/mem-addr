@@ -85,8 +85,8 @@
   @apply my-10 border-l-4 border-primary/20 pl-8 italic text-2xl font-headline text-primary/80;
 }
 
-.markdown-body code {
-  @apply bg-surface-container-high px-1.5 py-0.5 rounded font-mono text-sm;
+.markdown-body :not(pre) > code {
+  background: color-mix(in oklch, var(--color-primary) 10%, transparent); color: var(--color-primary); padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-family: ui-monospace, monospace; font-size: 0.875rem; font-weight: 500;
 }
 
 .markdown-body pre {

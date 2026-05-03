@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "motion/react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import MarkdownRenderer from "../components/MarkdownRenderer";
 import { Post, Category } from "../types";
 
 export default function Article() {
@@ -10,6 +9,7 @@ export default function Article() {
   const [post, setPost] = useState<Post | null>(null);
   const [allPosts, setAllPosts] = useState<Post[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [avatar, setAvatar] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`/api/posts/${id}`)
@@ -24,6 +24,9 @@ export default function Article() {
     fetch("/api/categories")
       .then((res) => res.json())
       .then(setCategories);
+    fetch("/api/profile")
+      .then((res) => res.json())
+      .then(data => setAvatar(data.avatar));
   }, [id]);
 
   const getCategoryName = (catId: string) => {
@@ -34,11 +37,7 @@ export default function Article() {
   const prevPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
   const nextPost = currentIndex >= 0 && currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
 
-  const articleTags = (() => {
-    if (!post) return [];
-    const cat = categories.find(c => c.id === post.category);
-    return cat ? [cat.name] : [post.category];
-  })();
+  const articleTags = post?.tags && post.tags.length > 0 ? post.tags : [];
 
   if (!post) return <div className="h-screen flex items-center justify-center font-headline">Distilling signal...</div>;
 
@@ -67,7 +66,7 @@ export default function Article() {
           <div className="flex items-center gap-4 mb-12">
             <div className="w-12 h-12 rounded-full bg-surface-container-high overflow-hidden">
               <img
-                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e"
+                src={avatar || "/uploads/20191227173203.jpg"}
                 alt={post.author}
                 className="w-full h-full object-cover"
               />
@@ -95,18 +94,20 @@ export default function Article() {
 
       <section className="max-w-3xl mx-auto px-8 pb-32">
         <div className="markdown-body">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          <MarkdownRenderer>
             {post.content || post.excerpt}
-          </ReactMarkdown>
+          </MarkdownRenderer>
         </div>
 
-        <div className="mt-20 flex flex-wrap gap-2">
-          {articleTags.map(tag => (
-            <span key={tag} className="px-3 py-1 bg-surface-container-high text-[0.65rem] font-bold tracking-widest uppercase text-primary font-label">
-              #{tag}
-            </span>
-          ))}
-        </div>
+        {articleTags.length > 0 && (
+          <div className="mt-20 flex flex-wrap gap-2">
+            {articleTags.map(tag => (
+              <Link key={tag} to={`/tag/${tag}`} className="px-3 py-1 bg-surface-container-high text-[0.65rem] font-bold tracking-widest uppercase text-primary font-label rounded hover:bg-primary/10 transition-colors inline-block">
+                #{tag}
+              </Link>
+            ))}
+          </div>
+        )}
 
         <nav className="mt-32 pt-12 border-t border-outline-variant/10">
           <div className="flex flex-col md:flex-row justify-between items-center gap-8">

@@ -2,8 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "motion/react";
 import { ArrowLeft, Save, Eye, Edit3, Upload, Image as ImageIcon, Search, X } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import MarkdownRenderer from "../../components/MarkdownRenderer";
 import { Post, Category } from "../../types";
 
 interface UnsplashPhoto {
@@ -36,8 +35,8 @@ export default function AdminEditor() {
     author: "Morven",
     category: "ai",
     image: "",
-    readTime: "10 min read"
-  });
+    readTime: "10 min read",
+    tags: [] as string[],  });
 
   // Unsplash search modal state
   const [showUnsplash, setShowUnsplash] = useState(false);
@@ -243,6 +242,32 @@ export default function AdminEditor() {
                 ))}
               </select>
             </div>
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2 mt-4">Tags</label>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {(formData.tags || []).map((tag: string, i: number) => (
+                  <span key={i} className="flex items-center gap-1 bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-label">
+                    {tag}
+                    <button type="button" onClick={() => setFormData({ ...formData, tags: (formData.tags || []).filter((_: string, j: number) => j !== i) })} className="hover:text-red-500 transition-colors">&times;</button>
+                  </span>
+                ))}
+              </div>
+              <input
+                type="text"
+                placeholder="Type tag and press Enter"
+                className="w-full bg-surface-container-low border-none rounded px-4 py-3 text-sm focus:ring-1 focus:ring-primary"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === ",") {
+                    e.preventDefault();
+                    const val = (e.target as HTMLInputElement).value.trim().toUpperCase();
+                    if (val && !(formData.tags || []).includes(val)) {
+                      setFormData({ ...formData, tags: [...(formData.tags || []), val] });
+                      (e.target as HTMLInputElement).value = "";
+                    }
+                  }
+                }}
+              />
+            </div>
           </div>
           <div className="space-y-6">
             <div>
@@ -334,9 +359,9 @@ export default function AdminEditor() {
             <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Visual Preview</label>
             <div className="w-full bg-surface-container-lowest rounded px-8 py-8 h-full overflow-y-auto border border-outline-variant/10">
               <div className="markdown-body">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                <MarkdownRenderer>
                   {formData.content || "*Void waits for signal...*"}
-                </ReactMarkdown>
+                </MarkdownRenderer>
               </div>
             </div>
           </div>
