@@ -29,6 +29,12 @@ export default function Article() {
       .then(data => setAvatar(data.avatar));
   }, [id]);
 
+  const formatDate = (raw: string) => {
+    if (!raw) return "";
+    const d = new Date(raw);
+    if (isNaN(d.getTime())) return raw;
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  };
   const getCategoryName = (catId: string) => {
     return categories.find(c => c.id === catId)?.name || catId;
   };
@@ -54,7 +60,7 @@ export default function Article() {
               {getCategoryName(post.category)}
             </span>
             <span className="text-[0.75rem]">
-              {post.date}
+              {formatDate(post.updatedAt || post.date)}
             </span>
             <span className="text-[0.75rem]">
               {post.readTime}
@@ -95,7 +101,7 @@ export default function Article() {
       <section className="max-w-3xl mx-auto px-8 pb-32">
         <div className="markdown-body">
           <MarkdownRenderer>
-            {post.content || post.excerpt}
+            {post.content || ""}
           </MarkdownRenderer>
         </div>
 

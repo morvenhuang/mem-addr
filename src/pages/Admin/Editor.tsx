@@ -30,12 +30,10 @@ export default function AdminEditor() {
 
   const [formData, setFormData] = useState<Partial<Post>>({
     title: "",
-    excerpt: "",
     content: "",
     author: "Morven",
     category: "ai",
     image: "",
-    readTime: "10 min read",
     tags: [] as string[],  });
 
   // Unsplash search modal state
@@ -172,15 +170,40 @@ export default function AdminEditor() {
     return cat.name;
   };
 
+  const computeReadTime = (text: string): string => {
+    const t = (text || "").trim();
+    // Count Chinese characters (CJK range)
+    const chineseChars = (t.match(/[一-鿿㐀-䶿]/g) || []).length;
+    // Count English words (non-CJK)
+    const englishWords = t.replace(/[一-鿿㐀-䶿]/g, "").trim().split(/\s+/).filter(Boolean).length;
+    // Chinese: ~400 chars/min, English: ~200 words/min
+    const minutes = Math.max(1, Math.ceil(chineseChars / 400 + englishWords / 200));
+    return `${minutes} min read`;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const method = id ? "PUT" : "POST";
     const url = id ? `/api/posts/${id}` : "/api/posts";
+    const now = new Date().toISOString();
+    const displayDate = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+    const body: any = {
+      ...formData,
+      readTime: computeReadTime(formData.content || ""),
+      updatedAt: now,
+    };
+
+    // On create, also set initial date
+    if (!id) {
+      body.date = displayDate;
+      body.createdAt = now;
+    }
 
     fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...formData, date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) })
+      body: JSON.stringify(body)
     }).then(() => navigate("/admin/dashboard"));
   };
 
@@ -304,26 +327,11 @@ export default function AdminEditor() {
                 </button>
               </div>
             </div>
-            <div>
-              <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Read Time</label>
-              <input
-                type="text"
-                value={formData.readTime}
-                onChange={(e) => setFormData({ ...formData, readTime: e.target.value })}
-                className="w-full bg-surface-container-low border-none rounded px-4 py-3 text-sm focus:ring-1 focus:ring-primary"
-              />
-            </div>
+
           </div>
         </div>
 
-        <div>
-          <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Excerpt</label>
-          <textarea
-            value={formData.excerpt}
-            onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
-            className="w-full bg-surface-container-low border-none rounded px-4 py-3 text-sm focus:ring-1 focus:ring-primary h-24"
-          />
-        </div>
+
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 min-h-[600px]">
           <div className={isPreview ? "hidden lg:block lg:opacity-50 pointer-events-none" : "block flex flex-col"}>

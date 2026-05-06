@@ -243,7 +243,7 @@ export default function AdminDashboard() {
                 <td className="px-8 py-6">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded bg-surface-container-high overflow-hidden shrink-0">
-                      <img src={post.image} className="w-full h-full object-cover grayscale" />
+                      <img src={post.image} className="w-full h-full object-cover" />
                     </div>
                     <span className="font-headline text-lg text-primary">{post.title}</span>
                   </div>

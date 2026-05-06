@@ -31,7 +31,12 @@ export default function Home() {
     setPage(0);
   }, [categoryId, tagName]);
 
-  const getCategoryName = (id: string) => {
+  const formatDate = (raw: string) => {
+    if (!raw) return "";
+    const d = new Date(raw);
+    if (isNaN(d.getTime())) return raw;
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  };  const getCategoryName = (id: string) => {
     return categories.find((c) => c.id.toLowerCase() === id.toLowerCase())?.name || id;
   };
 
@@ -87,26 +92,23 @@ export default function Home() {
                 className="rounded-xl overflow-hidden hover:shadow-[0px_12px_32px_rgba(0,25,39,0.06)] transition-all bg-surface-container-lowest flex flex-col group"
               >
                 <Link to={`/article/${post.id}`} className="flex flex-col h-full">
-                  <div className="relative overflow-hidden h-56">
+                  <div className="relative overflow-hidden h-48">
                     <img 
                       src={post.image} 
                       alt={post.title} 
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
                     />
                   </div>
-                  <div className="p-8 flex flex-col flex-grow">
+                  <div className="p-6 flex flex-col flex-grow">
                     <span className="bg-surface-container-high text-[10px] font-bold px-2 py-1 rounded mb-4 w-fit">
                       #{getCategoryName(post.category)}
                     </span>
-                    <h3 className="text-xl font-headline text-primary mb-4 leading-snug group-hover:text-secondary transition-colors">
+                    <h3 className="text-lg font-headline text-primary mb-3 leading-snug group-hover:text-secondary transition-colors">
                       {post.title}
                     </h3>
-                    <p className="text-sm text-on-surface-variant leading-relaxed mb-6 line-clamp-3">
-                      {post.excerpt}
-                    </p>
                     <div className="mt-auto pt-6 border-t border-outline-variant/10 flex justify-between items-center">
                       <span className="text-[10px] text-on-surface-variant/60 uppercase font-label tracking-widest">
-                        {post.date}
+                        {formatDate(post.updatedAt || post.date)}
                       </span>
                       <span className="text-[10px] text-on-surface-variant/40 font-medium">
                         {post.readTime}

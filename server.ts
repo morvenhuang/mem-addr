@@ -99,8 +99,8 @@ async function startServer() {
         }).filter(p => p !== null);
         
         posts.sort((a, b) => {
-          const dateA = new Date(a.date || 0);
-          const dateB = new Date(b.date || 0);
+          const dateA = new Date(a.updatedAt || a.date || 0);
+          const dateB = new Date(b.updatedAt || b.date || 0);
           return dateB.getTime() - dateA.getTime();
         });
       }
