@@ -163,6 +163,12 @@ async function startServer() {
     res.json(posts);
   });
 
+  app.get("/api/tags", (req, res) => {
+    const tagSet = new Set<string>();
+    posts.forEach(p => (p.tags || []).forEach((t: string) => tagSet.add(t)));
+    res.json(Array.from(tagSet).sort());
+  });
+
   app.get("/api/posts/:id", (req, res) => {
     const post = posts.find(p => p.id === req.params.id);
     if (post) res.json(post);
@@ -253,14 +259,24 @@ async function startServer() {
   });
 
   app.post("/api/upload", (req, res) => {
-    const { image } = req.body;
+    const { image, filename: desiredName } = req.body;
     if (!image) return res.status(400).json({ message: "No image data" });
 
     try {
       const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
       const extension = image.split(";")[0].split("/")[1];
-      const filename = `upload_${Date.now()}.${extension}`;
-      const filepath = path.join(uploadsDir, filename);
+      const ext = extension === "jpeg" ? "jpg" : extension;
+
+      // Build filename from desired name, handling collisions
+      const baseName = (desiredName || "upload").replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9_\-\u4e00-\u9fff]/g, "_");
+      let filename = `${baseName}.${ext}`;
+      let filepath = path.join(uploadsDir, filename);
+      let counter = 1;
+      while (fs.existsSync(filepath)) {
+        filename = `${baseName}_${counter}.${ext}`;
+        filepath = path.join(uploadsDir, filename);
+        counter++;
+      }
 
       fs.writeFileSync(filepath, base64Data, "base64");
       res.json({ url: `/uploads/${filename}` });

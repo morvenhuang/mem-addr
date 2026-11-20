@@ -1,0 +1,15 @@
+{
+  "title": "Maven 101",
+  "author": "Morven",
+  "category": "programming",
+  "image": "https://images.unsplash.com/photo-1778192391493-7436d746b128?q=80&w=1974&auto=format&fit=crop",
+  "tags": [
+    "JAVA",
+    "MAVEN"
+  ],
+  "readTime": "7 min read",
+  "updatedAt": "2026-05-12T06:40:12.056Z",
+  "date": "May 12, 2026",
+  "createdAt": "2026-05-12T06:40:12.056Z",
+  "id": "maven-101"
+}

@@ -43,6 +43,7 @@ export default function AdminEditor() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<UnsplashPhoto | null>(null);
   const [searchError, setSearchError] = useState("");
+  const [allTags, setAllTags] = useState<string[]>([]);
 
   useEffect(() => {
     if (localStorage.getItem("admin_auth") !== "true") {
@@ -53,6 +54,9 @@ export default function AdminEditor() {
     fetch("/api/categories")
       .then(res => res.json())
       .then(setCategories);
+    fetch("/api/tags")
+      .then(res => res.json())
+      .then(setAllTags);
 
     if (id) {
       fetch(`/api/posts/${id}`)
@@ -75,7 +79,7 @@ export default function AdminEditor() {
     const response = await fetch("/api/upload", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ image: base64 })
+      body: JSON.stringify({ image: base64, filename: file.name })
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.message || "Upload failed");
@@ -290,6 +294,20 @@ export default function AdminEditor() {
                   }
                 }}
               />
+              {allTags.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {allTags.filter(t => !(formData.tags || []).includes(t)).map(tag => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, tags: [...(formData.tags || []), tag] })}
+                      className="px-2 py-1 bg-surface-container-high text-on-surface-variant/60 rounded text-[10px] font-label uppercase tracking-wide hover:bg-primary/10 hover:text-primary transition-colors"
+                    >
+                      + {tag}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           <div className="space-y-6">
